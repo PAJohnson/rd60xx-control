@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>RD60XX Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 13px Helvetica, Arial;
+        }
+
+        .header {
+            font: 20px Helvetica, Arial;
+        }
+
+        .output-enabled {
+            background-color: green;
+        }
+
+        .output-disabled {
+            background-color: grey;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">Webpage for RD6012</div>
+    <p id="outputVoltage"></p>
+    <p id="outputCurrent"></p>
+    <p id="currentLimit"></p>
+    <p id="inputVoltage"></p>
+    <span>Set Output Voltage: </span>
+    <input id="setVoltage" type="number"></input><br>
+    <span>Set Output Current</span>
+    <input id="setCurrent" type="number"></input><br>
+    <button id="outputEnable">Enable Output</button>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        socket.on('currentLimit', function(msg) {
+            document.getElementById('currentLimit').innerHTML = "Current Limit: " + msg;
+        });
+        socket.on('cyclicData', (msg) => {
+            document.getElementById('outputVoltage').innerHTML = "Output Voltage: " + msg.outputVoltage;
+            document.getElementById('inputVoltage').innerHTML = "Input Voltage: " + msg.inputVoltage;
+            document.getElementById('outputCurrent').innerHTML = "Output Current: " + msg.outputCurrent;
+            document.getElementById('currentLimit').innerHTML = "Current Limit: " + msg.currentLimit;
+            if (msg.outputEnable == 1) {
+                document.getElementById('outputEnable').classList.remove('output-disabled');
+                document.getElementById('outputEnable').classList.add('output-enabled');
+            }
+            else {
+                document.getElementById('outputEnable').classList.add('output-disabled');
+                document.getElementById('outputEnable').classList.remove('output-enabled');
+            }
+        });
+
+        // set up event listeners
+        document.getElementById('setVoltage').onchange = function () {
+            let value = document.getElementById('setVoltage').value;
+            console.log(value);
+            socket.emit('setVoltage', value);
+        }
+        document.getElementById('setCurrent').onchange = function () {
+            let value = document.getElementById('setCurrent').value;
+            console.log(value);
+            socket.emit('setCurrent', value);
+        }
+        document.getElementById('outputEnable').onclick = function () {
+            console.log("onclick setOutputEnable");
+            socket.emit('setOutputEnable');
+        }
+    </script>
+</body>
+
+</html>
